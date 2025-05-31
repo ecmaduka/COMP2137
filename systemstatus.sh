@@ -11,7 +11,8 @@ echo -n "Free Memory: "
 free | awk 'NR==2 {print $3}'
 
 # Find and display the system free disk space
-echo -n  "System Free Disk: " 
+echo "System Free Disk: "
 df -h | awk '$1 ~ /^\/dev/ {print $1, $4}'
+
 
 
