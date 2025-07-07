@@ -10,7 +10,7 @@ NETPLAN_FILE="/etc/netplan/01-netcfg.yaml"
 if [ -f "$NETPLAN_FILE" ] && grep -q "192.168.16.21" "$NETPLAN_FILE"; then
   echo "[OK] Static IP already set."
 else
-  sudo bash -c "cat > $NETPLAN_FILE" <<EOF
+   sudo tee "$NETPLAN_FILE" > /dev/null <<EOF
 network:
   version: 2
   renderer: networkd
@@ -20,6 +20,7 @@ network:
       addresses:
         - 192.168.16.21/24
 EOF
+
 
   # Fix permissions (required to stop warnings)
   sudo chmod 600 "$NETPLAN_FILE"
@@ -124,4 +125,3 @@ done
 
 echo "-----------------------------------------------------"
 echo "✅ System configuration complete."
-
