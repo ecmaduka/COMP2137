@@ -7,7 +7,7 @@ echo "-----------------------------------------------------"
 # 1. Configure static IP with netplan
 echo "[*] Checking and setting static IP (192.168.16.21)..."
 NETPLAN_FILE="/etc/netplan/01-netcfg.yaml"
-if grep -q "192.168.16.21" "$NETPLAN_FILE"; then
+if [ -f "$NETPLAN_FILE" ] && grep -q "192.168.16.21" "$NETPLAN_FILE"; then
   echo "[OK] Static IP already set."
 else
   sudo bash -c "cat > $NETPLAN_FILE" <<EOF
@@ -75,27 +75,27 @@ for USER in $USERS; do
   RSA_KEY="$SSH_DIR/id_rsa"
   ED_KEY="$SSH_DIR/id_ed25519"
 
-  sudo mkdir -p "$SSH_DIR"
-  sudo touch "$AUTH_KEYS"
+  sudo -u "$USER" mkdir -p "$SSH_DIR"
+  sudo -u "$USER" touch "$AUTH_KEYS"
 
   # Generate RSA key if not already there
-  if [ ! -f "$RSA_KEY" ]; then
-    sudo -u "$USER" ssh-keygen -t rsa -N "" -f "$RSA_KEY" <<< y >/dev/null 2>&1
+  if sudo -u "$USER" [ ! -f "/home/$USER/.ssh/id_rsa" ]; then
+    sudo -u "$USER" ssh-keygen -t rsa -N "" -f "/home/$USER/.ssh/id_rsa"
     echo "[+] Created RSA key for $USER."
   else
     echo "[OK] RSA key exists for $USER."
   fi
 
   # Generate Ed25519 key if not already there
-  if [ ! -f "$ED_KEY" ]; then
-    sudo -u "$USER" ssh-keygen -t ed25519 -N "" -f "$ED_KEY" <<< y >/dev/null 2>&1
+  if sudo -u "$USER" [ ! -f "/home/$USER/.ssh/id_ed25519" ]; then
+    sudo -u "$USER" ssh-keygen -t ed25519 -N "" -f "/home/$USER/.ssh/id_ed25519"
     echo "[+] Created Ed25519 key for $USER."
   else
     echo "[OK] Ed25519 key exists for $USER."
   fi
 
   # Add keys to authorized_keys if not already present
-  for PUB in "$RSA_KEY.pub" "$ED_KEY.pub"; do
+  for PUB in "/home/$USER/.ssh/id_rsa.pub" "/home/$USER/.ssh/id_ed25519.pub"; do
     PUB_CONTENT=$(sudo cat "$PUB")
     if ! grep -qF "$PUB_CONTENT" "$AUTH_KEYS"; then
       echo "$PUB_CONTENT" | sudo tee -a "$AUTH_KEYS" > /dev/null
@@ -124,3 +124,4 @@ done
 
 echo "-----------------------------------------------------"
 echo "✅ System configuration complete."
+
